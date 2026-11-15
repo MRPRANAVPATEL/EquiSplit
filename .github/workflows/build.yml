@@ -1,0 +1,86 @@
+name: Build EquiSplit APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.apk.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: '8.7'
+
+      - name: Set up Android SDK 34
+        shell: bash
+        run: bash .github/scripts/setup-android-sdk.sh
+
+      - name: Test and build the APK
+        id: apk
+        shell: bash
+        run: |
+          gradle testDebugUnitTest assembleDebug --stacktrace
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/EquiSplit.apk
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify dist/EquiSplit.apk
+          version=$(sed -n 's/^equisplitVersion=//p' gradle.properties)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: EquiSplit-apk
+          path: dist/EquiSplit.apk
+          if-no-files-found: error
+
+  publish-preview:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: preview-${{ needs.build.outputs.version }}
+    steps:
+      - name: Download the tested APK
+        uses: actions/download-artifact@v8
+        with:
+          name: EquiSplit-apk
+          path: dist
+
+      - name: Publish the preview for this app version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP_VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          tag="v$APP_VERSION-preview"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            printf 'Preview %s already exists. The latest APK is available in this run’s artifacts.\n' "$tag"
+            exit 0
+          fi
+          gh release create "$tag" dist/EquiSplit.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "EquiSplit $APP_VERSION preview" \
+            --notes "Android preview from a tested build on main. The APK uses a test signing key. See the README for signed releases and update compatibility."
