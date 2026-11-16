@@ -1,8 +1,12 @@
 # EquiSplit
 
+**Thoughtfully built by Pranav Patel to solve everyday problems.**
+
 EquiSplit is an offline Android app for splitting shared bills between friends, couples, and families. Each named payer covers one or more people. Enter each expense under the person who paid it, then see the payments that settle the group.
 
 ## Install
+
+> Built for personal use and Android development practice. Install it at your own discretion.
 
 1. Open [Releases](https://github.com/MRPRANAVPATEL/EquiSplit/releases) and download **EquiSplit.apk** from a release’s **Assets**.
 2. Open the APK on an Android 8.0 or later phone and follow Android’s install prompts.
@@ -53,3 +57,7 @@ gradle testDebugUnitTest assembleDebug --stacktrace
 ```
 
 The APK is at `app/build/outputs/apk/debug/app-debug.apk`.
+
+---
+
+*Thoughtfully built by Pranav Patel to make splitting bills with friends and family easier.*
