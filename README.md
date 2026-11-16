@@ -6,7 +6,7 @@ EquiSplit is an offline Android app for splitting shared bills between friends, 
 
 ## Install
 
-> Built for personal use and Android development practice. Install it if you’d like to try it.
+> Built for personal use and Android development practice. Install it at your own discretion.
 
 1. Open [Releases](https://github.com/MRPRANAVPATEL/EquiSplit/releases) and download **EquiSplit.apk** from a release’s **Assets**.
 2. Open the APK on an Android 8.0 or later phone and follow Android’s install prompts.
